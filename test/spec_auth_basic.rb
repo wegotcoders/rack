@@ -20,6 +20,14 @@ describe Rack::Auth::Basic do
     app
   end
 
+  def protected_app_with_whitelist
+    app = Rack::Auth::Basic.new(unprotected_app, nil, :except => '/allowed_through') do |username, password|
+      'Boss' == username
+    end
+    app.realm = realm
+    app
+  end
+
   before do
     @request = Rack::MockRequest.new(protected_app)
   end
@@ -28,8 +36,8 @@ describe Rack::Auth::Basic do
     request 'HTTP_AUTHORIZATION' => 'Basic ' + ["#{username}:#{password}"].pack("m*"), &block
   end
 
-  def request(headers = {})
-    yield @request.get('/', headers)
+  def request(headers = {}, url = '/')
+    yield @request.get(url, headers)
   end
 
   def assert_basic_auth_challenge(response)
@@ -56,6 +64,15 @@ describe Rack::Auth::Basic do
     request_with_basic_auth 'Boss', 'password' do |response|
       response.status.must_equal 200
       response.body.to_s.must_equal 'Hi Boss'
+    end
+  end
+
+  it 'return application output if matches whitelisted URL' do
+    @request = Rack::MockRequest.new(protected_app_with_whitelist)
+
+    request({}, '/allowed_through') do |response|
+      response.status.must_equal 200
+      response.body.to_s.must_equal 'Hi '
     end
   end
 

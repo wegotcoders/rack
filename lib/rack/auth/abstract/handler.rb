@@ -8,8 +8,8 @@ module Rack
 
       attr_accessor :realm
 
-      def initialize(app, realm=nil, &authenticator)
-        @app, @realm, @authenticator = app, realm, authenticator
+      def initialize(app, realm=nil, options = {}, &authenticator)
+        @app, @realm, @options, @authenticator = app, realm, options, authenticator
       end
 
 

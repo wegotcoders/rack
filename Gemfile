@@ -14,6 +14,8 @@ end
 # Gemfile.lock if that gets committed/reused:
 # c_platforms = [:mri] if Gem.platforms.last.os == "java"
 
+gem 'pry'
+
 group :extra do
   gem 'fcgi', :platforms => c_platforms
   gem 'memcache-client'
