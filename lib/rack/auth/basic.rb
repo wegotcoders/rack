@@ -15,9 +15,7 @@ module Rack
       def call(env)
         auth = Basic::Request.new(env)
 
-        if @options[:except] && env["PATH_INFO"].start_with?(@options[:except])
-          return @app.call(env)
-        end
+        return @app.call(env) if [@options[:except]].flatten.compact.any? { |path| env["PATH_INFO"].start_with?(path) }
 
         return unauthorized unless auth.provided?
 

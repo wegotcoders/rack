@@ -20,8 +20,16 @@ describe Rack::Auth::Basic do
     app
   end
 
-  def protected_app_with_whitelist
+  def protected_app_with_excepted_path
     app = Rack::Auth::Basic.new(unprotected_app, nil, :except => '/allowed_through') do |username, password|
+      'Boss' == username
+    end
+    app.realm = realm
+    app
+  end
+
+  def protected_app_with_whitelist
+    app = Rack::Auth::Basic.new(unprotected_app, nil, :except => ['/allowed_through', '/also_allowed']) do |username, password|
       'Boss' == username
     end
     app.realm = realm
@@ -67,12 +75,30 @@ describe Rack::Auth::Basic do
     end
   end
 
+  it 'return application output if matches excepted URL' do
+    @request = Rack::MockRequest.new(protected_app_with_excepted_path)
+
+    request({}, '/allowed_through') do |response|
+      response.status.must_equal 200
+      response.body.to_s.must_equal 'Hi '
+    end
+  end
+
   it 'return application output if matches whitelisted URL' do
     @request = Rack::MockRequest.new(protected_app_with_whitelist)
 
     request({}, '/allowed_through') do |response|
       response.status.must_equal 200
       response.body.to_s.must_equal 'Hi '
+    end
+
+    request({}, '/also_allowed') do |response|
+      response.status.must_equal 200
+      response.body.to_s.must_equal 'Hi '
+    end
+
+    request({}, '/anything_else') do |response|
+      response.status.must_equal 401
     end
   end
 
